@@ -19,7 +19,7 @@ $ git clone https://github.com/program-kitchen/crm-backend
 
 すでにLaravelプロジェクトで必要なファイル等は構築しておりますので、ご自身のDockerでビルド後、コンテナを生成し、アプリケーションコンテナ(PHP)にログインしてください。
 
-### developブランチにてイメージのビルドと各種dockerコンテナ起動
+### イメージのビルドと各種dockerコンテナ起動
 ```
 $ docker-compose build
 ```
