@@ -1,0 +1,46 @@
+#docker-composeバージョン
+version: "3.8"
+
+volumes:
+  db-volume:
+
+#コンテナ詳細
+services:
+  #Webサーバーのコンテナ
+  nginx_server:
+    image: nginx:1.18
+    container_name: nginx-server
+    ports:
+      - '8000:80'
+    #コンテナの依存関係を示す(PHP→Nginxの順)
+    depends_on:
+      - php
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./:/var/www/html/
+
+  #phpアプリケーションのコンテナ
+  php:
+    build:
+        context: ./docker/php
+        dockerfile: Dockerfile
+    container_name: php-app
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./:/var/www/html/
+
+  #データベースのコンテナ
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    ports:
+      - '4306:3306'
+    environment:
+      MYSQL_DATABASE: coachtech-crm
+      MYSQL_USER: coachtech
+      MYSQL_PASSWORD: coachtech
+      MYSQL_ROOT_PASSWORD: root
+      TZ: 'Asia/Tokyo'
+    volumes:
+      - db-volume:/var/lib/mysql
