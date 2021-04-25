@@ -37,9 +37,9 @@ services:
     ports:
       - '4306:3306'
     environment:
-      MYSQL_DATABASE: coachtech-crm
-      MYSQL_USER: coachtech
-      MYSQL_PASSWORD: coachtech
+      MYSQL_DATABASE: crm_test_db
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: CrmTest2021
       MYSQL_ROOT_PASSWORD: root
       TZ: 'Asia/Tokyo'
     volumes:

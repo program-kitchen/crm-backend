@@ -138,7 +138,7 @@ mysql> select user, host, plugin from user;
 +------------------+-----------+-----------------------+
 | user             | host      | plugin                |
 +------------------+-----------+-----------------------+
-| coachtech        | %         | caching_sha2_password |
+| admin            | %         | caching_sha2_password |
 | root             | %         | caching_sha2_password |
 | mysql.infoschema | localhost | caching_sha2_password |
 | mysql.session    | localhost | caching_sha2_password |
@@ -153,7 +153,7 @@ coachtechとrootの認証方法を変更します。
 ```
 mysql> alter user 'root'@'%' identified with mysql_native_password by 'root';
 
-mysql> alter user 'coachtech'@'%' identified with mysql_native_password by 'coachtech';
+mysql> alter user 'admin'@'%' identified with mysql_native_password by 'CrmTest2021';
 ```
 
 プラグインが「mysql_native_password」になれば成功
@@ -162,12 +162,14 @@ mysql> select user, host, plugin from user;
 +------------------+-----------+-----------------------+
 | user             | host      | plugin                |
 +------------------+-----------+-----------------------+
-| coachtech        | %         | mysql_native_password |
-| mysql.infoschema | %         | mysql_native_password |
+| admin            | %         | mysql_native_password |
+| root             | %         | mysql_native_password |
+| mysql.infoschema | localhost | caching_sha2_password |
 | mysql.session    | localhost | caching_sha2_password |
 | mysql.sys        | localhost | caching_sha2_password |
 | root             | localhost | caching_sha2_password |
 +------------------+-----------+-----------------------+
+6 rows in set (0.00 sec)
 ```
 
 
