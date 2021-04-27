@@ -4,7 +4,7 @@
         use Illuminate\Database\Schema\Blueprint;
         use Illuminate\Database\Migrations\Migration;
         
-        class CreateCourseTable extends Migration
+        class CreateCoursesTable extends Migration
         {
             /**
              * Run the migrations.
@@ -13,7 +13,7 @@
              */
             public function up()
             {
-                Schema::create("course", function (Blueprint $table) {
+                Schema::create("courses", function (Blueprint $table) {
 
 						$table->increments('id')->comment('コースID');
 						$table->string('name',32)->comment('コース名');
@@ -28,9 +28,9 @@
 
 
 						// ----------------------------------------------------
-						// -- SELECT [course]--
+						// -- SELECT [courses]--
 						// ----------------------------------------------------
-						// $query = DB::table("course")
+						// $query = DB::table("courses")
 						// ->get();
 						// dd($query); //For checking
 
@@ -46,7 +46,7 @@
              */
             public function down()
             {
-                Schema::dropIfExists("course");
+                Schema::dropIfExists("courses");
             }
         }
     

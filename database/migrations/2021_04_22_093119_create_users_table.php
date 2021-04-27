@@ -4,7 +4,7 @@
         use Illuminate\Database\Schema\Blueprint;
         use Illuminate\Database\Migrations\Migration;
         
-        class CreateUserTable extends Migration
+        class CreateUsersTable extends Migration
         {
             /**
              * Run the migrations.
@@ -13,7 +13,7 @@
              */
             public function up()
             {
-                Schema::create("user", function (Blueprint $table) {
+                Schema::create("users", function (Blueprint $table) {
 
 						$table->increments('id')->comment('ユーザID');
                         $table->integer('uuid')->comment('ユーザUUID');
@@ -33,9 +33,9 @@
 
 
 						// ----------------------------------------------------
-						// -- SELECT [user]--
+						// -- SELECT [users]--
 						// ----------------------------------------------------
-						// $query = DB::table("user")
+						// $query = DB::table("users")
 						// ->get();
 						// dd($query)For checking
 
@@ -44,7 +44,7 @@
                 });
 
                 // uuidのbinary型はmigrationでは生成できないのでSQLで変更
-                DB::statement("ALTER TABLE `user` MODIFY `uuid` binary(16) NOT NULL COMMENT 'ユーザUUID'");
+                DB::statement("ALTER TABLE `users` MODIFY `uuid` binary(16) NOT NULL COMMENT 'ユーザUUID'");
             }
 
             /**
@@ -54,7 +54,7 @@
              */
             public function down()
             {
-                Schema::dropIfExists("user");
+                Schema::dropIfExists("users");
             }
         }
     

@@ -4,7 +4,7 @@
         use Illuminate\Database\Schema\Blueprint;
         use Illuminate\Database\Migrations\Migration;
         
-        class CreateTermTable extends Migration
+        class CreateTermsTable extends Migration
         {
             /**
              * Run the migrations.
@@ -13,7 +13,7 @@
              */
             public function up()
             {
-                Schema::create("term", function (Blueprint $table) {
+                Schema::create("terms", function (Blueprint $table) {
 
 						$table->integer('course_id')->unsigned()->comment('コースID');
 						$table->unsignedTinyInteger('order')->comment('ターム順番');
@@ -33,10 +33,10 @@
 
 
 						// ----------------------------------------------------
-						// -- SELECT [term]--
+						// -- SELECT [terms]--
 						// ----------------------------------------------------
-						// $query = DB::table("term")
-						// ->leftJoin("course","course.id", "=", "term.course_id")
+						// $query = DB::table("terms")
+						// ->leftJoin("course","course.id", "=", "terms.course_id")
 						// ->get();
 						// dd($query); //For checking
 
@@ -52,7 +52,7 @@
              */
             public function down()
             {
-                Schema::dropIfExists("term");
+                Schema::dropIfExists("terms");
             }
         }
     
