@@ -3,6 +3,7 @@ version: "3.8"
 
 volumes:
   db-volume:
+  maildir: {}
 
 #コンテナ詳細
 services:
@@ -44,3 +45,14 @@ services:
       TZ: 'Asia/Tokyo'
     volumes:
       - db-volume:/var/lib/mysql
+
+  mail:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - '8025:8025'
+    environment:
+      MH_STORAGE: maildir
+      MH_MAILDIR_PATH: /tmp
+    volumes:
+      - maildir:/tmp
