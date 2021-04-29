@@ -23,7 +23,10 @@ class UserController extends Controller
     */
     public function index(Request $request, string $uuid = '')
     {
-        return  "Call user index uuid=" . $uuid;
+        return json_encode([
+            "text" => "Call user index uuid=" . $uuid,
+            // 'token' => $request->session()->token()
+        ]); 
     }
 
     /**
@@ -34,7 +37,7 @@ class UserController extends Controller
     */
     public function regist(Request $request)
     {
-        return  "Call user regist";
+        return "Call user regist " . implode(':', $request->all());
     }
 
     /**
