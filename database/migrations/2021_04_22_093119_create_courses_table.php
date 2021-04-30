@@ -15,24 +15,24 @@
             {
                 Schema::create("courses", function (Blueprint $table) {
 
-						$table->increments('id')->comment('コースID');
-						$table->string('name',32)->comment('コース名');
-						$table->unsignedTinyInteger('term')->comment('期間');
-						$table->string('summary',256)->nullable()->comment('コース概要');
-						$table->integer('created_by_id')->comment('作成者ID');
-						$table->timestamp('created_at')->comment('作成日');
-						$table->integer('updated_by_id')->comment('更新者ID');
+                        $table->increments('id')->comment('コースID');
+                        $table->string('name',32)->comment('コース名');
+                        $table->unsignedTinyInteger('term')->comment('期間');
+                        $table->string('summary',256)->nullable()->comment('コース概要');
+                        $table->integer('created_by')->comment('作成者ID');
+                        $table->timestamp('created_at')->comment('作成日');
+                        $table->integer('updated_by')->comment('更新者ID');
                         $table->timestamp('updated_at')->comment('更新日');
-						$table->softDeletes()->comment('削除日');
+                        $table->softDeletes()->comment('削除日');
 
 
 
-						// ----------------------------------------------------
-						// -- SELECT [courses]--
-						// ----------------------------------------------------
-						// $query = DB::table("courses")
-						// ->get();
-						// dd($query); //For checking
+                        // ----------------------------------------------------
+                        // -- SELECT [courses]--
+                        // ----------------------------------------------------
+                        // $query = DB::table("courses")
+                        // ->get();
+                        // dd($query); //For checking
 
 
 
