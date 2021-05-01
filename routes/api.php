@@ -19,20 +19,20 @@ use App\Http\Controllers\UserController;
 
 // 未ログイン状態でアクセス可能
 // ログイン
-Route::post('/login', [LoginController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login']);
 // ユーザ有効化
-Route::post('user/activate', [LoginController::class, 'activate']);
+Route::post('user/activate', [AuthController::class, 'activate']);
 
 // ログイン中の全ユーザがアクセス可能
 Route::group([
     'middleware' => 'auth:api',
 ], function ($router) {
     // ログアウト
-    Route::post('/logout', [LoginController::class, 'logout']);
+    Route::post('/logout', [AuthController::class, 'logout']);
     // ログイントークン再生成
-    Route::post('/refresh', [LoginController::class, 'refresh']);
+    Route::post('/refresh', [AuthController::class, 'refresh']);
     // ログインユーザ情報取得
-    Route::get('/user-profile', [LoginController::class, 'userProfile']);
+    Route::get('/user-profile', [AuthController::class, 'userProfile']);
 });
 
 // ログイン中のバックオフィス権限以上のユーザがアクセス可能
