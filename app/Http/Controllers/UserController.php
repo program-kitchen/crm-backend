@@ -3,10 +3,19 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use app/Models/User;
 
 /**
- * ユーザ管理用コントローラクラス。
- */
+* ユーザ管理
+*
+* 機能一覧
+* ユーザ一覧を取得する
+* ユーザを取得する
+* ユーザを登録する
+* ユーザを削除する
+* 削除されたユーザを復活する
+* ユーザを有効化する
+*/
 class UserController extends Controller
 {
     /* 登録チェックルール */
@@ -14,16 +23,60 @@ class UserController extends Controller
             //'' => 'required|unique:posts|max:255',
             //'body' => 'required'
           ];
+
+    const COLUMNS = 'uuid, name, role, email, is_active, deleted_at';
+
     /**
-    * ユーザ情報を取得する。
+    * ユーザ一覧を取得する。
+    *
+    * @param  Request   $request 検索条件と取得ページ番号
+[
+  "name" : "[ユーザ名]",
+  "role" : "[ユーザ権限]",
+  "email" : "[メールアドレス]",
+  "withDeleted" : "[削除フラグ(0:未削除ユーザを取得、1:削除済みユーザを含めて取得)]",
+  "page" : "[ページネーションの表示位置]"
+]    * @return string    ユーザ情報一覧JSON
+    */
+    public function index(Request $request)
+    {
+        try {
+            $data = $request()->all();
+            Log::debug(['request data', $data]);
+            if (!$data) {
+                throw new Exception('Invalid request data');
+            }
+            $user = User::selectRaw(self::COLUMNS);
+            if (($v = $data['name'])) {
+                $user->where('name', 'like', "$v%");
+            }
+            if (($v = $data['role'])) {
+                $user->where('role', $v);
+            }
+            if (($v = $data['email'])) {
+                $user->where('email', 'like', "$v%");
+            }
+            if (!$data['withDeleted']) {
+                $user->whereNull('deleted_at');
+            }
+            return self::jsonData($user->get()->toArray());
+        }
+        catch (\Throwable $e) {
+            return self::jsonResponse(400, $e->getMessage());
+        }
+    }
+
+    /**
+    * ユーザを取得する。
     *
     * @param  Request   $request    リクエストデータ
-    * @param  string    $uuid       ユーザUUID(未指定の場合は全件取得)
+    * @param  string    $uuid       ユーザUUID
     * @return ユーザ情報JSON
     */
-    public function index(Request $request, string $uuid = '')
+    public function show(Request $request, string $uuid)
     {
-        return  "Call user index uuid=" . $uuid;
+        return self::jsonData(
+            User::selectRaw(self::COLUMNS)->where('uuid', $uuid)->toArray());
     }
 
     /**
@@ -32,9 +85,10 @@ class UserController extends Controller
     * @param  Request   $request    リクエストデータ
     * @return void
     */
-    public function regist(Request $request)
+    public function register(Request $request)
     {
         return  "Call user regist";
+        User::insertOr
     }
 
     /**
@@ -45,7 +99,9 @@ class UserController extends Controller
     */
     public function delete(Request $request)
     {
-        return  "Call user delete";
+        $data = $request()->all();
+        User::where('uuid', $data['uuid'])->update(['deleted_at' => 1, 'updated_by' => $data['loginUuid']]);
+        return self::jsonData(null);
     }
 
     /**
@@ -54,9 +110,11 @@ class UserController extends Controller
     * @param  Request   $request    リクエストデータ
     * @return void
     */
-    public function revival(Request $request)
+    public function revive(Request $request)
     {
-        return  "Call user revival";
+        $data = $request()->all();
+        User::where('uuid', $data['uuid'])->update(['deleted_at' => null, 'updated_by' => $data['loginUuid']]);
+        return self::jsonData(null);
     }
 
     /**
@@ -65,7 +123,7 @@ class UserController extends Controller
     * @param  Request   $request    リクエストデータ
     * @return void
     */
-    public function activation(Request $request)
+    public function activate(Request $request)
     {
         return  "Call user activation";
     }

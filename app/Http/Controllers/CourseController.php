@@ -32,7 +32,7 @@ class CourseController extends Controller
     * @param  Request   $request    リクエストデータ
     * @return コース情報JSON
     */
-    public function regist(Request $request)
+    public function register(Request $request)
     {
         return  "Call course regist";
     }
