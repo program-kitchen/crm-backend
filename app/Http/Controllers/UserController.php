@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use app/Models/User;
+use Illuminate\Support\Arr;
+use Illuminate\Validation\Rule;
+
+use App\Models\User;
 
 /**
 * ユーザ管理
@@ -24,42 +27,25 @@ class UserController extends Controller
             //'body' => 'required'
           ];
 
-    const COLUMNS = 'uuid, name, role, email, is_active, deleted_at';
-
     /**
     * ユーザ一覧を取得する。
     *
     * @param  Request   $request 検索条件と取得ページ番号
-[
-  "name" : "[ユーザ名]",
-  "role" : "[ユーザ権限]",
-  "email" : "[メールアドレス]",
-  "withDeleted" : "[削除フラグ(0:未削除ユーザを取得、1:削除済みユーザを含めて取得)]",
-  "page" : "[ページネーションの表示位置]"
-]    * @return string    ユーザ情報一覧JSON
+    *     'name' : ユーザ名
+    *     'role' : ユーザ権限
+    *     'email': メールアドレス
+    *     'withDeleted' : 未削除ユーザを含むかどうか
+    *     'page' : ページ
+    * @return string    ユーザ情報一覧JSON
     */
     public function index(Request $request)
     {
         try {
-            $data = $request()->all();
-            Log::debug(['request data', $data]);
-            if (!$data) {
-                throw new Exception('Invalid request data');
-            }
-            $user = User::selectRaw(self::COLUMNS);
-            if (($v = $data['name'])) {
-                $user->where('name', 'like', "$v%");
-            }
-            if (($v = $data['role'])) {
-                $user->where('role', $v);
-            }
-            if (($v = $data['email'])) {
-                $user->where('email', 'like', "$v%");
-            }
-            if (!$data['withDeleted']) {
-                $user->whereNull('deleted_at');
-            }
-            return self::jsonData($user->get()->toArray());
+            return self::dataResponse(
+                User::list($request->input('name', ''), $request->input('role', null),
+                           $request->input('email', ''), $request->input('withDeleted', false)
+                )->paginate(3)
+            );
         }
         catch (\Throwable $e) {
             return self::jsonResponse(400, $e->getMessage());
@@ -69,62 +55,85 @@ class UserController extends Controller
     /**
     * ユーザを取得する。
     *
-    * @param  Request   $request    リクエストデータ
-    * @param  string    $uuid       ユーザUUID
+    * @param  Request   $request HTTPリクエスト
+    * @param  string    $uuid    ユーザUUID
     * @return ユーザ情報JSON
     */
     public function show(Request $request, string $uuid)
     {
-        return self::jsonData(
-            User::selectRaw(self::COLUMNS)->where('uuid', $uuid)->toArray());
+        return self::dataResponse(User::getOne($uuid));
     }
 
     /**
-    * ユーザ情報を登録する。
+    * ユーザ情報を登録/更新する。
     *
-    * @param  Request   $request    リクエストデータ
+    * 
+    * @param  Request   $request HTTPリクエスト
+    *     'name'  : ユーザ名
+    *     'email' : メールアドレス
+    *     'role'  : ユーザ権限
+    *     'uuid'  : ユーザuuid 空の時 新規登録, 
     * @return void
     */
     public function register(Request $request)
     {
-        return  "Call user regist";
-        User::insertOr
+        $name  = $request->input('name' , '');
+        $email = $request->input('email', '');
+        $role  = $request->input('role' , -1);
+        $uuid  = $request->input('uuid');
+        \Log::debug('$name: [' . $name . ']');
+/*        // 入力項目検証
+        $emailRule = Rule::unique('App\Models\User', 'email')->ignore($data['id']);
+        Validator::make(
+            compact('name', 'email', 'role'),
+            [
+                'name'  => ['required', 'string', 'max:32'],
+                'email' => ['required', 'email' , 'max:256', $emailRule],
+                'role'  => ['required', 'digits_between:1,4'],
+            ]
+        )->validate();
+*/
+        User::register($name, $email, $role, $uuid);
+        return self::voidResponse();
     }
 
     /**
     * ユーザ情報を削除する。
     *
-    * @param  Request   $request    リクエストデータ
+    * @param  Request   $request HTTPリクエスト
     * @return void
     */
     public function delete(Request $request)
     {
-        $data = $request()->all();
-        User::where('uuid', $data['uuid'])->update(['deleted_at' => 1, 'updated_by' => $data['loginUuid']]);
-        return self::jsonData(null);
+        User::deleteOne($request->input('uuid'));
+        return self::voidResponse();
     }
 
     /**
     * 削除されたユーザを復活する。
     *
-    * @param  Request   $request    リクエストデータ
+    * @param  Request   $request HTTPリクエスト
     * @return void
     */
     public function revive(Request $request)
     {
-        $data = $request()->all();
-        User::where('uuid', $data['uuid'])->update(['deleted_at' => null, 'updated_by' => $data['loginUuid']]);
-        return self::jsonData(null);
+        User::revive($request->input('uuid'));
+        return self::voidResponse();
     }
 
     /**
     * ユーザ情報を有効化する。
     *
-    * @param  Request   $request    リクエストデータ
+    * 値検証 TODO
+    *
+    * @param  Request   $request HTTPリクエスト
     * @return void
     */
     public function activate(Request $request)
     {
-        return  "Call user activation";
+        $uuid = $request->input('uuid', '');
+        $pw   = $request->input('password', '');
+        User::activate($uuid, $pw);
+        return self::voidResponse();
     }
 }

@@ -11,7 +11,6 @@ abstract class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
-
     /**
     * 認証済みでないかトークンが無効の時のjson応答を返す。
     *
@@ -24,7 +23,23 @@ abstract class Controller extends BaseController
     /**
     *
     */
-    public static function jsonResponse($status, $data = [])
+    public static function dataResponse($data)
+    {
+        return self::jsonResponse(200, $data);
+    }
+
+    /**
+    *
+    */
+    public static function voidResponse()
+    {
+        return self::jsonResponse(200);
+    }
+
+    /**
+    *
+    */
+    public static function jsonResponse(int $status, $data = '')
     {
         return response()->json($data, $status, [], JSON_UNESCAPED_UNICODE);
     }
@@ -43,7 +58,7 @@ abstract class Controller extends BaseController
                 throw new Exception('Invalid request data');
             }
             $res = call_user_func_array($method, [$data]);
-            return self::jsonResponse(201, null);
+            return self::jsonResponse(200, null);
         }
         catch (\Throwable $e) {
             return self::jsonResponse(500, $e->getMessage());
