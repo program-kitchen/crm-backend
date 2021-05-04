@@ -21,7 +21,8 @@
                         $table->unsignedTinyInteger('term')->comment('期間');
                         $table->string('summary',256)->nullable()->comment('ターム概要');
                         $table->integer('created_by')->comment('作成者ID');
-                        $table->timestamp('created_at')->comment('作成日');
+                        $table->timestamp('created_at')->
+                            default(DB::raw('CURRENT_TIMESTAMP'))->comment('作成日');
                         $table->primary(['course_id', 'order']);
 
                         //*********************************

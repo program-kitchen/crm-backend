@@ -20,9 +20,11 @@
                         $table->unsignedTinyInteger('term')->comment('期間');
                         $table->string('summary',256)->nullable()->comment('コース概要');
                         $table->integer('created_by')->comment('作成者ID');
-                        $table->timestamp('created_at')->comment('作成日');
+                        $table->timestamp('created_at')->
+                            default(DB::raw('CURRENT_TIMESTAMP'))->comment('作成日');
                         $table->integer('updated_by')->comment('更新者ID');
-                        $table->timestamp('updated_at')->comment('更新日');
+                        $table->timestamp('updated_at')->
+                            default(DB::raw('CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP'))->comment('更新日');
                         $table->softDeletes()->comment('削除日');
 
 
