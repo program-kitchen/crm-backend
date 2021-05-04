@@ -17,11 +17,13 @@ use App\Http\Controllers\UserController;
 |
 */
 
+const UUID_REGEX = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
+
 // 未ログイン状態でアクセス可能
 // ログイン
 Route::post('/login', [AuthController::class, 'login']);
 // ユーザ有効化
-Route::post('user/activate', [AuthController::class, 'activate']);
+Route::post('user/activate', [UserController::class, 'activate']);
 
 // ログイン中の全ユーザがアクセス可能
 Route::group([
@@ -42,15 +44,17 @@ Route::group([
 ], function ($router) {
     // ユーザ管理
     Route::prefix('user')->group(function () {
-        // ユーザ取得
-        Route::get('/index/{uuid?}', [UserController::class, 'index']);
-        // ユーザ登録
+        // 一覧
+        Route::get('', [UserController::class, 'index']);
+        // 取得
+        Route::get('/{uuid}', [UserController::class, 'show']
+            )->where('uuid', UUID_REGEX);
+        // 登録
         Route::post('/register', [UserController::class, 'register']);
-        // ユーザ削除
+        // 削除
         Route::post('/delete', [UserController::class, 'delete']);
-        // ユーザ復活
-        Route::post('/revive', [UserController::class, 'revival']);
-        
+        // 復活
+        Route::post('/revive', [UserController::class, 'revive']);
     });
 
     // コース管理

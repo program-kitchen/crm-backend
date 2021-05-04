@@ -6,6 +6,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
@@ -73,13 +74,13 @@ class User extends Authenticatable implements JWTSubject
     /**
     * 一覧を取得する。
     *
-    * @param string name        ユーザ名の検索条件   部分一致
-    * @param int    role        ユーザ権限の検索条件
-    * @param string email       メールアドレスの検索条件 部分一致
-    * @param bool   withDeleted 削除ユーザを含めるかどうか
+    * @param ?string name        ユーザ名の検索条件   部分一致
+    * @param ?int    role        ユーザ権限の検索条件
+    * @param ?string email       メールアドレスの検索条件 部分一致
+    * @param ?bool   withDeleted 削除ユーザを含めるかどうか
     * @return Illuminate\Pagination\LengthAwarePaginator ユーザ一覧
     */
-    public static function list(string $name, ?int $role, string $email, bool $withDeleted)
+    public static function list(?string $name, ?int $role, ?string $email, ?bool $withDeleted)
     {
         $user = self::selectRaw(self::COLUMNS);
         if ($name) {
@@ -113,13 +114,13 @@ class User extends Authenticatable implements JWTSubject
     *
     * 登録者と更新者にログインユーザidを格納する TODO
     *
-    * @param  string $name  名前の値
-    * @param  string $email emailの値
-    * @param  int    $role  権限の値
-    * @param  string $uuid  uuid 更新対象データキー
+    * @param  ?string $name  名前の値
+    * @param  ?string $email emailの値
+    * @param  ?int    $role  権限の値
+    * @param  ?string $uuid  uuid 更新対象データキー
     * @return void
     */
-    public static function register(string $name, string $email, int $role, string $uuid)
+    public static function register(?string $name, ?string $email, ?int $role, ?string $uuid)
     {
         $data = compact('name', 'email', 'role');
         \Log::debug(print_r($data, true));
@@ -138,7 +139,7 @@ class User extends Authenticatable implements JWTSubject
     */
     public static function deleteOne(string $uuid)
     {
-        self::updateByUuid($uuid, ['deleted_at' => null]);
+        self::updateByUuid($uuid, ['deleted_at' => DB::raw('CURRENT_TIMESTAMP')]);
     }
 
     /**

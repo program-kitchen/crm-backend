@@ -39,6 +39,14 @@ abstract class Controller extends BaseController
     /**
     *
     */
+    public static function badValueResponse($errors)
+    {
+        return self::jsonResponse(400, $errors);
+    }
+
+    /**
+    *
+    */
     public static function jsonResponse(int $status, $data = '')
     {
         return response()->json($data, $status, [], JSON_UNESCAPED_UNICODE);

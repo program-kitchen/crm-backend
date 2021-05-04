@@ -4,8 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
-use Illuminate\Validation\Rule;
-
+use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 
 /**
@@ -40,16 +39,12 @@ class UserController extends Controller
     */
     public function index(Request $request)
     {
-        try {
             return self::dataResponse(
                 User::list($request->input('name', ''), $request->input('role', null),
                            $request->input('email', ''), $request->input('withDeleted', false)
-                )->paginate(3)
+                )->get()
+//                )->paginate(3)
             );
-        }
-        catch (\Throwable $e) {
-            return self::jsonResponse(400, $e->getMessage());
-        }
     }
 
     /**
@@ -77,22 +72,25 @@ class UserController extends Controller
     */
     public function register(Request $request)
     {
-        $name  = $request->input('name' , '');
-        $email = $request->input('email', '');
-        $role  = $request->input('role' , -1);
+        $name  = $request->input('name');
+        $email = $request->input('email');
+        $role  = $request->input('role');
         $uuid  = $request->input('uuid');
         \Log::debug('$name: [' . $name . ']');
-/*        // 入力項目検証
-        $emailRule = Rule::unique('App\Models\User', 'email')->ignore($data['id']);
-        Validator::make(
+        // 入力項目検証
+        //$emailRule = Rule::unique('App\Models\User', 'email')->ignore($data['id']);
+        $vali = \Validator::make(
             compact('name', 'email', 'role'),
             [
-                'name'  => ['required', 'string', 'max:32'],
-                'email' => ['required', 'email' , 'max:256', $emailRule],
-                'role'  => ['required', 'digits_between:1,4'],
+                'name' => 'required|string|max:32',
+                // 'email' => 'required|emailmax:256', $emailRule],
+                'email'=> 'required|email|max:256',
+                'role' => 'required|integer|min:1|max:4',
             ]
-        )->validate();
-*/
+        );
+        if($vali->fails()){
+            return self::badValueResponse($vali->errors());
+        }
         User::register($name, $email, $role, $uuid);
         return self::voidResponse();
     }
