@@ -1,8 +1,8 @@
 <?php
 
 namespace App\Http\Controllers;
-use Illuminate\Http\Request;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Validator;
@@ -12,6 +12,12 @@ use Validator;
  */
 class AuthController extends Controller
 {
+    // ログイン入力チェックルール
+    const LOGIN_CHECK_RULE = [
+        'email'    => ['required', 'max:255', 'email'],
+        'password' => ['required', 'pass_invalid', 'between:8,15'/*, 'pass_format'*/], // 正規表現がおかしいので一部コメントアウト
+    ];
+
     /**
      * Create a new AuthController instance.
      *
@@ -20,6 +26,7 @@ class AuthController extends Controller
     public function __construct()
     {
         $this->middleware('auth:api', ['except' => ['login']]);
+        $this->middleware('JpJsonResponse');
     }
 
     /**
@@ -29,13 +36,20 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        $credentials = request(['email', 'password']);
-        \Log::Info($credentials);
+        // 入力チェック
+        $this->validate($request, self::LOGIN_CHECK_RULE);
 
+        // ログイン処理
+        $credentials = request(['email', 'password']);
         if (! $token = auth()->attempt($credentials)) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+            // TODO 共通部へ変更予定
+            return response()->json(['errorMsg' => 'ユーザID、パスワードが一致しません。'], 401);
         }
 
+        // 情報ログ出力
+        \Log::Info("user login: id=" . auth()->user()->id);
+
+        // トークン発行
         return $this->createNewToken($token);
     }
 
@@ -46,8 +60,15 @@ class AuthController extends Controller
      */
     public function logout()
     {
+        // ログアウト処理
+        $userId = auth()->user()->id;
         auth()->logout();
 
+        // 情報ログ出力
+        \Log::Info("user logout: id=" . $userId);
+
+        // レスポンス送信 
+        // TODO 共通部へ変更予定
         return response()->json(['message' => 'User successfully signed out']);
     }
 

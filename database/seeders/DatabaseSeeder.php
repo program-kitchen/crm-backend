@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
         // 初期ユーザ登録
         User::create([
             'name' => 'オーナー',
-            'password' => \Crypt::encrypt('owner'),
+            'password' => \Crypt::encrypt('owner-2021'),
             'role' => 4,
             'email' => 'test@test.com',
             'is_active' => 1,
