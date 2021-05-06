@@ -16,7 +16,6 @@ abstract class Controller extends BaseController
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
     /**
-<<<<<<< HEAD
      * 入力チェックを行う
      * ※エラーの場合はValidationExceptionが発行され、
      *   エラーハンドラクラスからエラー応答が返される。
@@ -28,7 +27,9 @@ abstract class Controller extends BaseController
     {
         $validator = \Validator::make($request->all(), $rules);
         $validator->validate();
-=======
+    }
+
+    /**
     * 認証済みでないかトークンが無効の時のjson応答を返す。
     *
     */
@@ -88,6 +89,5 @@ abstract class Controller extends BaseController
         catch (\Throwable $e) {
             return self::jsonResponse(500, $e->getMessage());
         }
->>>>>>> 00c97952acf9b664e72d2f03b0d83b7eceded991
     }
 }
