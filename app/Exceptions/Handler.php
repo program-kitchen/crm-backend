@@ -51,7 +51,7 @@ class Handler extends ExceptionHandler
      * Render an exception into an HTTP response.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \Exception  $exception
+     * @param  \Throwable  $e
      * @return \Illuminate\Http\Response
      */
     public function render($request, Throwable $e)
@@ -66,7 +66,7 @@ class Handler extends ExceptionHandler
 
         // エラーログ出力
         \Log::error(
-            'Error occured : request_url=' . $request->fullUrl() . "\r\n"
+            'Error occured : request_url=' . $request->fullUrl() . "\r\n" .
             "Exception :\r\n" . $e
         );
 
