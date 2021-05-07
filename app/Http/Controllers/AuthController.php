@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Validator;
+use Symfony\Component\HttpFoundation\Response;
 
 /*
  *  ログイン認証用コントローラクラス
@@ -14,8 +15,8 @@ class AuthController extends Controller
 {
     // ログイン入力チェックルール
     const LOGIN_CHECK_RULE = [
-        'email'    => ['required', 'max:255', 'email'],
-        'password' => ['required', 'pass_invalid', 'between:8,15'/*, 'pass_format'*/], // 正規表現がおかしいので一部コメントアウト
+        'email'    => ['required', 'max:256'],
+        'password' => ['required', 'between:8,15'],
     ];
 
     /**
@@ -26,7 +27,6 @@ class AuthController extends Controller
     public function __construct()
     {
         $this->middleware('auth:api', ['except' => ['login']]);
-        $this->middleware('JpJsonResponse');
     }
 
     /**
@@ -36,20 +36,22 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        // 入力チェック
+        // 入力チェック実施
         $this->validate($request, self::LOGIN_CHECK_RULE);
 
-        // ログイン処理
+        // ログイン認証実施
         $credentials = request(['email', 'password']);
         if (! $token = auth()->attempt($credentials)) {
-            // TODO 共通部へ変更予定
-            return response()->json(['errorMsg' => 'ユーザID、パスワードが一致しません。'], 401);
+            return self::errorResponse(
+                Response::HTTP_UNAUTHORIZED,
+                'ユーザID、パスワードが一致しません。'
+            );
         }
 
         // 情報ログ出力
         \Log::Info("user login: id=" . auth()->user()->id);
 
-        // トークン発行
+        // トークンを発行し、レスポンス送信
         return $this->createNewToken($token);
     }
 
@@ -68,8 +70,7 @@ class AuthController extends Controller
         \Log::Info("user logout: id=" . $userId);
 
         // レスポンス送信 
-        // TODO 共通部へ変更予定
-        return response()->json(['message' => 'User successfully signed out']);
+        return self::voidResponse();
     }
 
     /**

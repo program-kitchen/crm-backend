@@ -73,8 +73,8 @@ class BaseException extends RuntimeException implements Responsable
         // エラーメッセージが未設定で
         // エラーメッセージ定義が存在するHTTPステータスコードの場合
         if (empty($this->message) &&
-            array_key_exists($this->statusCode, ERROR_MSG)) {
-            return ERROR_MSG[$this->statusCode];
+            array_key_exists($this->statusCode, self::ERROR_MSG)) {
+            return self::ERROR_MSG[$this->statusCode];
         }
 
         return $this->message;
@@ -95,7 +95,7 @@ class BaseException extends RuntimeException implements Responsable
      */
     public function isDefindErrorCode(): bool
     {
-        return array_key_exists($this->statusCode, ERROR_MSG);
+        return array_key_exists($this->statusCode, self::ERROR_MSG);
     }
 
     /**
@@ -108,7 +108,8 @@ class BaseException extends RuntimeException implements Responsable
     {
         return new JsonResponse(
             $this->getBasicResponse(),
-            $this->getStatusCode()
+            $this->getStatusCode(),
+            [], JSON_UNESCAPED_UNICODE
         );
     }
 

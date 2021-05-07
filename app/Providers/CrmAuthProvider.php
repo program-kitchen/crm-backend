@@ -41,7 +41,7 @@ class CrmAuthProvider extends UserProvider
             }
         }
         // select句をカスタマイズ
-        $query->selectRaw('id, BIN_TO_UUID(uuid) as uuid, name, password, role, email, is_active, deleted_at');
+        $query->selectRaw('id, BIN_TO_UUID(uuid) as uuid, name, password, role, email, is_active');
 
         return $query->first();
     }
