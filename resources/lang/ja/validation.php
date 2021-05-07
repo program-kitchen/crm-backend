@@ -127,6 +127,10 @@ return [
     |
     */
 
-    'attributes' => [],
+    'attributes' => [
+        'name'      => '名称',
+        'term'      => '期間',
+        'summary'   => '概要',
+    ],
 
 ];

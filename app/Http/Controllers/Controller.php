@@ -11,9 +11,33 @@ use Illuminate\Routing\Controller as BaseController;
 /*
  * コントローラの基底クラス
  */
-abstract class Controller extends BaseController
+class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+
+    /**
+     * Create a new Controller instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        $this->middleware('JpJsonResponse');
+    }
+
+    /**
+     * 入力チェックを行う
+     * ※エラーの場合はValidationExceptionが発行され、
+     *   エラーハンドラクラスからエラー応答が返される。
+     *
+     * @param string    $params パラメータ
+     * @param array     $rules  入力チェックルール
+     */
+    protected function validateArray(array $params, array $rules)
+    {
+        $validator = \Validator::make($params, $rules);
+        $validator->validate();
+    }
 
     /**
      * 入力チェックを行う
@@ -23,10 +47,9 @@ abstract class Controller extends BaseController
      * @param Request   $request    リクエストデータ
      * @param array     $rules      入力チェックルール
      */
-    protected function validate(Request $request, $rules)
+    protected function validate(Request $request, array $rules)
     {
-        $validator = \Validator::make($request->all(), $rules);
-        $validator->validate();
+        $this->validateArray($request->all(), $rules);
     }
 
     /**
@@ -57,9 +80,9 @@ abstract class Controller extends BaseController
     /**
     *
     */
-    public static function badValueResponse($errors)
+    public static function errorResponse(int $status, $message)
     {
-        return self::jsonResponse(400, $errors);
+        return self::jsonResponse($status, $message);
     }
 
     /**
@@ -89,5 +112,15 @@ abstract class Controller extends BaseController
         catch (\Throwable $e) {
             return self::jsonResponse(500, $e->getMessage());
         }
+    }
+
+    /**
+     * 配列を文字列に変換する。
+     * @param  array $array 変換対象の配列
+     */
+    public static function arrayToString(array $array)
+    {
+        $str = var_export($array, true);
+        return str_replace(array("\r\n", "\r", "\n"), '', $str);
     }
 }
