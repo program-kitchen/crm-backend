@@ -17,7 +17,7 @@ class User extends Authenticatable implements JWTSubject
     public const TABLE = 'users';
     protected $table = self::TABLE;
 
-    const COLUMNS = 'uuid, name, role, email, is_active, deleted_at';
+    const COLUMNS = 'BIN_TO_UUID(uuid) uuid, name, role, email, is_active, deleted_at';
 
     //protected $guarded = [];
 
@@ -82,20 +82,20 @@ class User extends Authenticatable implements JWTSubject
     */
     public static function list(?string $name, ?int $role, ?string $email, ?bool $withDeleted)
     {
-        $user = self::selectRaw(self::COLUMNS);
+        $query = self::selectRaw(self::COLUMNS);
         if ($name) {
-            $user->where('name', 'like', "%$name%");
+            $query->where('name', 'like', "%$name%");
         }
         if ($role) {
-            $user->where('role', $role);
+            $query->where('role', $role);
         }
         if ($email){
-            $user->where('email', 'like', "%$email%");
+            $query->where('email', 'like', "%$email%");
         }
         if (!$withDeleted) {
-            $user->whereNull('deleted_at');
+            $query->whereNull('deleted_at');
         }
-        return $user;
+        return $query;
     }
 
     /**
@@ -104,7 +104,7 @@ class User extends Authenticatable implements JWTSubject
     * @param  string   $uuid    ユーザUUID
     * @return stdClass ユーザ
     */
-    public static function getOne(string $uuid)
+    public static function pick(string $uuid)
     {
         return self::whereUuid($uuid)->selectRaw(self::COLUMNS)->first();
     }
@@ -118,17 +118,22 @@ class User extends Authenticatable implements JWTSubject
     * @param  ?string $email emailの値
     * @param  ?int    $role  権限の値
     * @param  ?string $uuid  uuid 更新対象データキー
-    * @return void
+    * @return 更新時: null, 
+    *         登録時: string 本登録トークン
     */
     public static function register(?string $name, ?string $email, ?int $role, ?string $uuid)
     {
         $data = compact('name', 'email', 'role');
         \Log::debug(print_r($data, true));
         if ($uuid && self::updateByUuid($uuid, $data)) {
-            return;
+            return null;
         }
+        // 登録時は本登録トークンを登録する
+        $token = md5(rand(0, 9) . $email . time());
         $data['created_by'] = $data['updated_by'] = 1000;
+        $data['token'] = $token;
         self::Insert($data);
+        return $token;
     }
 
     /**
@@ -137,7 +142,7 @@ class User extends Authenticatable implements JWTSubject
     * @param  string $uuid ユーザUUID
     * @return void
     */
-    public static function deleteOne(string $uuid)
+    public static function erase(string $uuid)
     {
         self::updateByUuid($uuid, ['deleted_at' => DB::raw('CURRENT_TIMESTAMP')]);
     }
