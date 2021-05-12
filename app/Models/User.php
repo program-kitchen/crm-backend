@@ -7,17 +7,19 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
+use App\Notifications\CustomPasswordReset;
+use App\Notifications\VerifyEmail;
 
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable implements JWTSubject
+class User extends Authenticatable implements JWTSubject, MustVerifyEmail
 {
     use HasFactory, Notifiable;
 
     public const TABLE = 'users';
     protected $table = self::TABLE;
 
-    const COLUMNS = 'BIN_TO_UUID(uuid) uuid, name, role, email, is_active, deleted_at';
+    const COLUMNS = 'uuid, name, role, email, is_active, deleted_at';
 
     //protected $guarded = [];
 
@@ -40,6 +42,11 @@ class User extends Authenticatable implements JWTSubject
     protected $hidden = [
         'password',
         'remember_token',
+        'email_verified_at',
+        'created_by',
+        'created_at',
+        'updated_by',
+        'updated_at',
     ];
 
     /**
@@ -95,24 +102,29 @@ class User extends Authenticatable implements JWTSubject
         if (!$withDeleted) {
             $query->whereNull('deleted_at');
         }
-        return $query;
+        return $query->get();
     }
 
     /**
     * ユーザを取得する。
     *
     * @param  string   $uuid    ユーザUUID
+    * @param  bool     $isGetId ユーザID取得フラグ
     * @return stdClass ユーザ
     */
-    public static function pick(string $uuid)
+    public static function pickUp(string $uuid, bool $isGetId = false)
     {
-        return self::whereUuid($uuid)->selectRaw(self::COLUMNS)->first();
+        $columns = self::COLUMNS;
+        if ($isGetId) {
+            $columns .= ', id';
+        }
+        return self::whereUuid($uuid)->selectRaw($columns)->first();
     }
 
     /**
     * ユーザを登録/更新する。
     *
-    * 登録者と更新者にログインユーザidを格納する TODO
+    * 登録者と更新者にログインユーザidを格納する
     *
     * @param  ?string $name  名前の値
     * @param  ?string $email emailの値
@@ -123,17 +135,18 @@ class User extends Authenticatable implements JWTSubject
     */
     public static function register(?string $name, ?string $email, ?int $role, ?string $uuid)
     {
+        // ログインユーザ情報取得
+        $user = auth()->user();
+
+        // UUIDが指定されていれば更新
         $data = compact('name', 'email', 'role');
-        \Log::debug(print_r($data, true));
+        $data['updated_by'] = $user->id;
         if ($uuid && self::updateByUuid($uuid, $data)) {
             return null;
         }
-        // 登録時は本登録トークンを登録する
-        $token = md5(rand(0, 9) . $email . time());
-        $data['created_by'] = $data['updated_by'] = 1000;
-        $data['token'] = $token;
-        self::Insert($data);
-        return $token;
+        // 指定されていなければ登録
+        $data['created_by'] = $user->id;
+        self::insert($data);
     }
 
     /**
@@ -144,7 +157,15 @@ class User extends Authenticatable implements JWTSubject
     */
     public static function erase(string $uuid)
     {
-        self::updateByUuid($uuid, ['deleted_at' => DB::raw('CURRENT_TIMESTAMP')]);
+        // ログインユーザ情報取得
+        $user = auth()->user();
+
+        // 削除日を登録
+        $data = array(
+            'deleted_at' => DB::raw('CURRENT_TIMESTAMP'),
+            'updated_by' => $user->id
+        );
+        self::updateByUuid($uuid, $data);
     }
 
     /**
@@ -155,7 +176,15 @@ class User extends Authenticatable implements JWTSubject
     */
     public static function revive(string $uuid)
     {
-        self::updateByUuid($uuid, ['deleted_at' => null]);
+        // ログインユーザ情報取得
+        $user = auth()->user();
+
+        // 削除日を未指定に変更
+        $data = array(
+            'deleted_at' => null,
+            'updated_by' => $user->id
+        );
+        self::updateByUuid($uuid, $data);
     }
 
     /**
@@ -167,13 +196,25 @@ class User extends Authenticatable implements JWTSubject
     */
     public static function activate(string $uuid, string $password)
     {
+        // パスワードを暗号化
+        $password = \Crypt::encrypt($password);
+
+        // 未ログインの為、ログインユーザ情報をDBから取得
+        $user = self::pickUp($uuid, true);
+
+        // パスワードとアクティブフラグを更新
+        $data = array(
+            'deleted_at' => null,
+            'updated_by' => $user->id
+        );
+        // パスワードと有効フラグを更新
         self::updateByUuid($uuid, ['password' => $password, 'is_active' => 1]);
     }
 
     /**
     * ユーザを更新する。
     *
-    * 更新者にログインユーザid(?uuid) を設定する TODO
+    * 更新者にログインユーザid(?uuid) を設定する
     *
     * @param  string $uuid ユーザUUID
     * @param  array  $data 更新データ
@@ -192,6 +233,22 @@ class User extends Authenticatable implements JWTSubject
     */
     private static function whereUuid(string $uuid)
     {
-        return self::whereRaw('uuid = UUID_TO_BIN(?)', [$uuid]);
+        return self::where('uuid', $uuid);
+    }
+
+    /*
+     *
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new CustomPasswordReset($token));
+    }
+
+    /*
+     *
+     */
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new VerifyEmail);
     }
 }

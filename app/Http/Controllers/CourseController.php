@@ -27,16 +27,37 @@ class CourseController extends Controller
     * コース情報とそれに紐づくターム情報を取得する。
     *
     * @param  Request   $request    リクエストデータ
-    * @param  int       $id         コースID(未指定の場合は全件取得)
     * @return コース情報JSON
     */
-    public function index(Request $request, int $id = 0)
+    public function index(Request $request)
+    {
+        // デバッグログ出力
+        \Log::Debug("コース情報一覧取得");
+
+        // コース情報一覧を取得
+        $courses = Course::list();
+
+        // レスポンス送信
+        return self::dataResponse($courses);
+    }
+
+    /**
+     * コース情報を取得する。
+     *
+     * @param  Request   $request HTTPリクエスト
+     * @param  int    $id    コースID
+     * @return コース情報JSON
+     */
+    public function show(Request $request, int $id)
     {
         // デバッグログ出力
         \Log::Debug("コース情報取得：". $id);
 
+        // コース情報取得
+        $course = Course::pickUp($id);
 
-        return  "Call course index id=" . $id;
+        // レスポンス送信
+        return self::dataResponse($course);
     }
 
     /**
@@ -69,7 +90,7 @@ class CourseController extends Controller
         } else {
             Course::create(
                 $params['name'],
-                intval($params['term']),
+                $params['term'],
                 $params['summary'],
                 $params['termInfo']
             );

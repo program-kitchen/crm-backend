@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Term;
 use Exception;
 
-
 /*
  * コース情報のモデルクラス
  */
@@ -21,7 +20,7 @@ class Course extends Model
     public const TABLE = 'courses';
     protected $table = self::TABLE;
     // 一覧の取得対象カラム
-    const SELECT_COLUMNS = 'id, name, term, summary, deleted_at';
+    const SELECT_COLUMNS = '`id`, `name`, `term`, `summary`, `deleted_at`';
 
     /**
      * コース一覧を取得する。
@@ -29,17 +28,39 @@ class Course extends Model
      * @param  int    $id  コースID(未指定の場合は全件取得)
      * @return LengthAwarePaginator コース一覧
      */
-    public static function list(int $id = 0)
+    public static function list()
     {
         // コース情報取得
-        $term = self::selectRaw(self::SELECT_COLUMNS)->
-            orderByRaw('id ASC');
-        // コースIDが指定されている場合は絞り込み
-        if ($id > 0) {
-            $term->find($id);
-        }
+        $courses = self::selectRaw(self::SELECT_COLUMNS)->
+            orderByRaw('`id` ASC')->get();
+        
+        return $courses;
+    }
 
-        return $term;
+    /**
+     * 指定されたコース情報を取得する。
+     *
+     * @param  int    $id  コースID(未指定の場合は全件取得)
+     * @return LengthAwarePaginator コース一覧
+     */
+    public static function pickUp(int $id)
+    {
+        // コース情報取得
+        $courses = self::selectRaw(self::SELECT_COLUMNS)->
+            where('id', $id)->first();
+        // ターム情報取得
+        $terms = Term::list($id);
+        $termList = array();
+        foreach ($terms as $term) {
+            $termList[] = array(
+                'name'      => $term['name'],
+                'term'      => $term['term'],
+                'summary'   => $term['summary'],
+            );
+        }
+        $courses['termInfo'] = $termList;
+
+        return $courses;
     }
 
     /**
@@ -122,11 +143,11 @@ class Course extends Model
     }
 
     /**
-    * コース情報を論理削除する。
-    *
-    * @param  int $id コースID
-    * @return void
-    */
+     * コース情報を論理削除する。
+     *
+     * @param  int $id コースID
+     * @return void
+     */
     public static function deleteOne(int $id)
     {
         try {

@@ -2,6 +2,7 @@
 
 namespace App\Exceptions;
 
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Response;
@@ -80,6 +81,11 @@ class Handler extends ExceptionHandler
             return $this->toResponse(
                 $request, $e->getStatusCode(), $e->getMessage()
             );
+        }
+
+        // アクセス権限がない場合
+        if ($e instanceof AuthorizationException) {
+            return $this->toResponse($request, Response::HTTP_FORBIDDEN);
         }
 
         if (env('APP_DEBUG', false)) {

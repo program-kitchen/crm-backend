@@ -4,6 +4,7 @@ namespace App\Exceptions;
 
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use RuntimeException;
 
 /*
@@ -18,13 +19,14 @@ class BaseException extends RuntimeException implements Responsable
      *      value string エラーメッセージ
      */
     const ERROR_MSG = [
-        400 => "リクエストパラメータが異常です。",
-        403 => "アクセス権限がありません。",
-        404 => "リソースが見つかりません。",
-        405 => "リクエストされたHTTPメソッドは許可されていません。",
-        408 => "リクエストがタイムアウトしました。",
-        500 => "システムエラーが発生しました。\r\n" .
-               "システム管理者へお問い合わせください。",
+        Response::HTTP_BAD_REQUEST           => "リクエストパラメータが異常です。",
+        Response::HTTP_FORBIDDEN             => "アクセス権限がありません。",
+        Response::HTTP_NOT_FOUND             => "リソースが見つかりません。",
+        Response::HTTP_METHOD_NOT_ALLOWED    => "リクエストされたHTTPメソッドは許可されていません。",
+        Response::HTTP_REQUEST_TIMEOUT       => "リクエストがタイムアウトしました。",
+        Response::HTTP_INTERNAL_SERVER_ERROR =>
+            "システムエラーが発生しました。\r\n" .
+            "システム管理者へお問い合わせください。",
     ];
 
     /**
@@ -41,10 +43,12 @@ class BaseException extends RuntimeException implements Responsable
      * BaseErrorException constructor.
      *
      * @param int $statusCode ステータスコード
-     * @param string $message 簡易エラーメッセージ
+     * @param string $message エラーメッセージ
      */
-    public function __construct(int $statusCode = 500, string $message = '')
-    {
+    public function __construct(
+        int $statusCode = Response::HTTP_INTERNAL_SERVER_ERROR,
+        string $message = ''
+    ) {
         $this->message = $message;
         $this->statusCode = $statusCode;
     }

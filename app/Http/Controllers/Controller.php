@@ -53,65 +53,44 @@ class Controller extends BaseController
     }
 
     /**
-    * 認証済みでないかトークンが無効の時のjson応答を返す。
-    *
-    */
-    public static function unauthorized()
-    {
-        return self::jsonResponse(401, 'Unauthorized');
-    }
-
-    /**
-    *
-    */
+     * 正常応答(戻り値あり)を返す
+     *
+     * @param array $data 戻り値
+     */
     public static function dataResponse($data)
     {
         return self::jsonResponse(200, $data);
     }
 
     /**
-    *
-    */
+     * 正常応答(戻り値なし)を返す
+     */
     public static function voidResponse()
     {
         return self::jsonResponse(200);
     }
 
     /**
-    *
-    */
+     * 異常応答を返す
+     *
+     * @param int       $status     HTTPステータスコード
+     * @param string    $message    エラーメッセージ
+     */
     public static function errorResponse(int $status, $message)
     {
-        return self::jsonResponse($status, $message);
+        $errData = array('errorMsg' => $message);
+        return self::jsonResponse($status, $errData);
     }
 
     /**
-    *
-    */
+     * 応答をJSON形式で返す
+     *
+     * @param int       $status HTTPステータスコード
+     * @param string    $data   応答データ
+     */
     public static function jsonResponse(int $status, $data = '')
     {
         return response()->json($data, $status, [], JSON_UNESCAPED_UNICODE);
-    }
-
-    /**
-    * json用 api 共通部分。
-    *
-    * @param  string $method DB操作機能の関数名
-    */
-    private function apiCommon(callable $method)
-    {
-        try {
-            $data = request()->all();
-            Log::debug(['request data', $data]);
-            if (!$data) {
-                throw new Exception('Invalid request data');
-            }
-            $res = call_user_func_array($method, [$data]);
-            return self::jsonResponse(200, null);
-        }
-        catch (\Throwable $e) {
-            return self::jsonResponse(500, $e->getMessage());
-        }
     }
 
     /**

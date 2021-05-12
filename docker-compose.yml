@@ -28,6 +28,8 @@ services:
     container_name: php-app
     ports:
       - "9000:9000"
+    environment:
+      TZ: 'Asia/Tokyo'
     volumes:
       - ./:/var/www/html/
 
@@ -46,6 +48,7 @@ services:
     volumes:
       - db-volume:/var/lib/mysql
 
+  #メールサーバのコンテナ
   mail:
     image: mailhog/mailhog
     container_name: mailhog
@@ -54,5 +57,6 @@ services:
     environment:
       MH_STORAGE: maildir
       MH_MAILDIR_PATH: /tmp
+      TZ: 'Asia/Tokyo'
     volumes:
       - maildir:/tmp

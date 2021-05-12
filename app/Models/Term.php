@@ -19,7 +19,7 @@ class Term extends Model
     public const TABLE = 'terms';
     protected $table = self::TABLE;
     // 一覧の取得対象カラム
-    const SELECT_COLUMNS = 'course_id, order, name, term, summary';
+    const SELECT_COLUMNS = '`course_id`, `order`, `name`, `term`, `summary`';
 
     /**
      * ターム一覧を取得する。
@@ -27,17 +27,13 @@ class Term extends Model
      * @param  int    courseId  コースID(未指定の場合は全件取得)
      * @return LengthAwarePaginator コースに紐づくターム一覧
      */
-    public static function list(int $courseId = 0)
+    public static function list()
     {
         // ターム情報取得
-        $term = self::selectRaw(self::SELECT_COLUMNS)->
-                orderByRaw('order ASC');
-        // コースIDが指定されている場合は絞り込み
-        if ($courseId > 0) {
-            $term->where('course_id', $courseId);
-        }
+        $terms = self::selectRaw(self::SELECT_COLUMNS)->
+                orderByRaw('`order` ASC');
 
-        return $term;
+        return $terms->get();
     }
 
     /**
@@ -54,7 +50,6 @@ class Term extends Model
     {
         $order = 1;
         foreach ($termList as $term) {
-            \Log::Debug("order：". $order);
             // ターム情報をマージ
             $term['course_id'] = $courseId;
             $term['order'] = $order;

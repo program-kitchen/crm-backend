@@ -24,6 +24,8 @@ class CrmAuthProvider extends UserProvider
             Str::contains($this->firstCredentialKey($credentials), 'password'))) {
             return;
         }
+        // ログイン条件にアクティブフラグ追加
+        $credentials['is_active'] = 1;
 
         // First we will add each credential element to the query as a where clause.
         // Then we can execute the query and, if we found a user, return it in a
@@ -40,8 +42,6 @@ class CrmAuthProvider extends UserProvider
                 $query->where($key, $value);
             }
         }
-        // select句をカスタマイズ
-        $query->selectRaw('id, BIN_TO_UUID(uuid) as uuid, name, password, role, email, is_active');
 
         return $query->first();
     }
