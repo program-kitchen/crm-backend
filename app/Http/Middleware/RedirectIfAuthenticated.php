@@ -23,8 +23,7 @@ class RedirectIfAuthenticated
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
-                // フロントエンドのトップページへリダイレクト
-                return redirect(config('const.frontTop'));
+                return $next($request);
             }
         }
 

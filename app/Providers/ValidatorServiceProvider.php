@@ -30,18 +30,18 @@ class ValidatorServiceProvider extends ServiceProvider
         });
 
         // パスワードの無効文字チェック追加 
-        Validator::extend('pass_invalid', function ($attribute, $value, $parameters, $validator) {
+        Validator::extend('pass_valid', function ($attribute, $value, $parameters, $validator) {
             return !preg_match(config('const.regex')['password']['invalid'], $value);
         });
 
-        // パスワードの文字数チェック追加 TODO 正規表現がおかしい
-        Validator::extend('pass_length', function ($attribute, $value, $parameters, $validator) {
-            return !preg_match(config('const.regex')['password']['length'], $value);
+        // パスワードの組み合わせチェック追加
+        Validator::extend('pass_format', function ($attribute, $value, $parameters, $validator) {
+            return preg_match(config('const.regex')['password']['format'], $value);
         });
 
-        // パスワードの組み合わせチェック追加 TODO 正規表現がおかしい
-        Validator::extend('pass_format', function ($attribute, $value, $parameters, $validator) {
-            return !preg_match(config('const.regex')['password']['format'], $value);
+        // UUIDのフォーマットチェックを追加
+        Validator::extend('uuid', function ($attribute, $value, $parameters, $validator) {
+            return !preg_match(config('const.regex')['uuid'], $value);
         });
     }
 }

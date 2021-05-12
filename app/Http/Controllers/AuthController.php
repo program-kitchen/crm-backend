@@ -109,5 +109,4 @@ class AuthController extends Controller
             'user' => auth()->user()
         ]);
     }
-
 }
