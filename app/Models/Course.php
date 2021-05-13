@@ -6,8 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
+use App\Exceptions\ApiException;
 use App\Models\Term;
-use Exception;
 
 /*
  * コース情報のモデルクラス
@@ -98,7 +98,7 @@ class Course extends Model
             \Log::Error("コース情報登録失敗\r\n" . $e);
             // ロールバック
             \DB::rollback();
-            throw new Exception("コース情報の登録に失敗しました。");
+            throw new ApiException("コース情報の登録に失敗しました。");
         }
     }
 
@@ -138,7 +138,7 @@ class Course extends Model
             \Log::Error("コース情報更新失敗\r\n" . $e);
             // ロールバック
             \DB::rollback();
-            throw new Exception("コース情報の更新に失敗しました。");
+            throw new ApiException("コース情報の更新に失敗しました。");
         }
     }
 
@@ -167,7 +167,7 @@ class Course extends Model
             \Log::Error("コース情報削除失敗\r\n" . $e);
             // ロールバック
             \DB::rollback();
-            throw new Exception("コース情報の削除に失敗しました。");
+            throw new ApiException("コース情報の削除に失敗しました。");
         }
     }
 }
