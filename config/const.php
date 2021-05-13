@@ -19,7 +19,7 @@ return [
         // 本番環境
         'product'       => 'https://coachtech-crm.com',
         // ローカル環境
-        'local'         => 'http://localhost:8000',
+        'local'         => 'http://localhost:3000',
         // パスワードリセットページURL
         'reset_pass'     => 'password/reset?token=',
         // アクティベーションページURL
