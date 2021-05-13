@@ -18,12 +18,12 @@ class CreateUsersTable extends Migration
             $table->uuid('uuid')->default(DB::raw('(UUID())'))->comment('ユーザUUID');
             $table->string('name',32)->comment('ユーザ名');
             $table->string('password',256)->default('')->comment('ログインパスワード');
-            $table->rememberToken()->comment('パスワードリセット用トークン');
             $table->tinyInteger('role')->default(1)->
                 comment('ユーザ権限:1:コーチ、2:バックオフィス、3:管理者、4:オーナー');
             $table->string('email',256)->comment('メールアドレス');
-            $table->timestamp('email_verified_at')->nullable()->comment('メール認証日時');
             $table->tinyInteger('is_active')->default(0)->comment('アクティブ:0：無効、1：有効');
+            $table->string('token', 32)->nullable()->default('')->comment('有効化トークン');
+            $table->timestamp('token_validity_period')->nullable()->comment('トークン有効期間');
             $table->integer('created_by')->comment('作成者ID');
             $table->timestamp('created_at')->
                 default(DB::raw('CURRENT_TIMESTAMP'))->comment('作成日');
@@ -33,6 +33,7 @@ class CreateUsersTable extends Migration
             $table->softDeletes()->comment('削除日');
             $table->unique('uuid');
             $table->unique('email');
+            $table->index('uuid');
 
             // ----------------------------------------------------
             // -- SELECT [users]--

@@ -32,15 +32,15 @@ class AuthServiceProvider extends ServiceProvider
         });
         // オーナー権限の場合のみ許可
         Gate::define('owner', function ($user) {
-            return ($user->role == config('const.userAuth')['owner']);
+            return ($user->role == config('const.user_auth')['owner']);
         });
         // 管理者権限以上の場合に許可
         Gate::define('admin', function ($user) {
-            return ($user->role >= config('const.userAuth')['admin']);
+            return ($user->role >= config('const.user_auth')['admin']);
         });
         // バックオフィス権限以上の場合に許可
         Gate::define('back_office', function ($user) {
-            return ($user->role >= config('const.userAuth')['backOffice']);
+            return ($user->role >= config('const.user_auth')['back_office']);
         });
     }
 }

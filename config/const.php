@@ -7,9 +7,9 @@
 return [
 
     /* ユーザ権限 */
-    'userAuth' => [
+    'user_auth' => [
         'coach' => 1,       // コーチ権限
-        'backOffice' => 2,  // バックオフィス権限
+        'back_office' => 2,  // バックオフィス権限
         'admin' => 3,       // 管理者権限
         'owner' => 4,       // オーナー権限
     ],
@@ -17,13 +17,13 @@ return [
     /* フロントエンドのURL */
     'frontend' => [
         // 本番環境
-        'product'       => 'api.coachtech-crm.com',
+        'product'       => 'https://coachtech-crm.com',
         // ローカル環境
-        'local'         => 'localhost:8000',
+        'local'         => 'http://localhost:8000',
         // パスワードリセットページURL
-        'resetPass'     => '/reset?queryURL=',
+        'reset_pass'     => 'password/reset?token=',
         // アクティベーションページURL
-        'activation'    => '/activate?queryURL=',
+        'activation'    => '/user/activate?token=',
 
     ],
 
@@ -43,5 +43,8 @@ return [
         // UUID形式チェック
         'uuid' => '{^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$}u',
     ],
+
+    /* ユーザ認証トークンの有効時間(分) */
+    'token_valide_minute' => 60,
 
 ];

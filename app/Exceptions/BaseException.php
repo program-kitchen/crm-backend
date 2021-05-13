@@ -9,7 +9,7 @@ use RuntimeException;
 
 /*
  * 基底例外クラス
- * 例外発生時のエラー応答をカスタマイズするために作成
+ * 基底処理の例外発生時のエラー応答をカスタマイズするために作成
  */
 class BaseException extends RuntimeException implements Responsable
 {
@@ -74,10 +74,8 @@ class BaseException extends RuntimeException implements Responsable
      */
     public function getErrorMessage(): string
     {
-        // エラーメッセージが未設定で
         // エラーメッセージ定義が存在するHTTPステータスコードの場合
-        if (empty($this->message) &&
-            array_key_exists($this->statusCode, self::ERROR_MSG)) {
+        if (array_key_exists($this->statusCode, self::ERROR_MSG)) {
             return self::ERROR_MSG[$this->statusCode];
         }
 

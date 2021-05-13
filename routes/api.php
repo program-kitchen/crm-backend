@@ -25,12 +25,8 @@ use App\Http\Controllers\VerificationController;
 Route::post('/login', [AuthController::class, 'login']);
 // ユーザ有効化
 Route::post('user/activate', [UserController::class, 'activate']);
-// メール認証
-Route::get('user/verify/{uuid}', [VerificationController::class, 'verify']
-    )->name('verification.verify');
-// 認証メール再送信
-Route::post('user/resend', [VerificationController::class, 'resend']);
-
+// ユーザ有効化トークン検証
+Route::post('user/validate-token', [UserController::class, 'validateToken']);
 
 // ログイン中の全ユーザがアクセス可能
 Route::group([
@@ -42,11 +38,6 @@ Route::group([
     Route::post('/refresh', [AuthController::class, 'refresh']);
     // ログインユーザ情報取得
     Route::get('/user-profile', [AuthController::class, 'userProfile']);
-
-    Route::post("/password/email", [ForgotPasswordController::class, 'sendResetLinkEmail']);
-
-    Route::post("/password/reset/{token}", [ResetPasswordController::class, 'reset']);
-
 });
 
 // ログイン中のバックオフィス権限以上のユーザがアクセス可能

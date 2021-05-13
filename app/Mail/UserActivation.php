@@ -6,48 +6,40 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\URL;
-use App\Models\User;
 
+/*
+ * ユーザ認証メール用のメッセージクラス
+ */
 class UserActivation extends Mailable
 {
     use Queueable, SerializesModels;
 
-    // 送信先ユーザ情報
-    public $sendUser;
+    // 送信ユーザ名
+    public $userName;
+    // ユーザ認証用URL
+    public $url;
 
     /**
-     * 新しいメッセージインスタンスの生成
+     * ユーザ認証メール用のメッセージクラスを生成する
      *
-     * @param  \App\Models\User  $sendUser 送信先ユーザ情報
+     * @param  string $userName 送信ユーザ名
+     * @param  string $url      ユーザ認証用URL
      * @return void
      */
-    public function __construct(User $sendUser)
+    public function __construct(string $userName, string $url)
     {
-        // 送信先ユーザ情報を取得
-        $this->sendUser = $sendUser;
+        $this->userName = $userName;
+        $this->url = $url;
     }
 
     /**
-     * メッセージを作成
+     * メール本文を作成する
      *
      * @return $this
      */
     public function build()
     {
-        // 環境に応じてフロントエンドのURLを取得
-        $env = 'local';
-        if (env('APP_DEBUG', false)) {
-            $env = 'product';
-        }
-        $url = config('const.frontend')[$env] .
-               config('const.frontend')['resetPass'] .
-               url('api/password/reset', $this->token);
-        // 署名付きURL作成
-        URL::temporarySignedRoute(
-            'unsubscribe', now()->addMinutes(30), ['uuid' => $sendUser->uuid]
-        );
-
-        return $this->view('emails.admit');
+        return $this->text('emails.admit')
+                    ->subject('【COACHTECH-CRM】本登録のお願い');
     }
 }

@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Http\Response;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 use App\Notifications\CustomPasswordReset;
 use App\Notifications\VerifyEmail;
-
+use App\Exceptions\ApiException;
+use Carbon\Carbon ;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject, MustVerifyEmail
@@ -87,8 +90,9 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     * @param ?bool   withDeleted 削除ユーザを含めるかどうか
     * @return Illuminate\Pagination\LengthAwarePaginator ユーザ一覧
     */
-    public static function list(?string $name, ?int $role, ?string $email, ?bool $withDeleted)
-    {
+    public static function list(
+        ?string $name, ?int $role, ?string $email, ?bool $withDeleted
+    ) {
         $query = self::selectRaw(self::COLUMNS);
         if ($name) {
             $query->where('name', 'like', "%$name%");
@@ -122,6 +126,34 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     }
 
     /**
+    * ユーザ認証トークンの検証を行う。
+    * トークンが有効期間内であれば対象のユーザ情報を取得する。
+    * 有効期間を過ぎていた場合はエラー応答を返す。
+    *
+    * @param  string   $token ユーザ認証トークン
+    * @return stdClass ユーザ情報
+    */
+    public static function pickUpAtToken(string $token)
+    {
+        // トークンからユーザ情報を取得
+        $now = Carbon::now()->toDateTimeString();
+        \Log::info('日時：' . $now);
+        $user = self::selectRaw(self::COLUMNS)
+            ->where('token', $token)
+            ->where('token_validity_period', '>', $now)
+            ->first();
+        // ユーザ情報が取得できなかった場合は有効期間切れ
+        if (!$user) {
+            throw new ApiException(
+                Response::HTTP_BAD_REQUEST,
+                'ユーザ認証の有効期間が切れています。'
+            );
+        }
+
+        return $user;
+    }
+
+    /**
     * ユーザを登録/更新する。
     *
     * 登録者と更新者にログインユーザidを格納する
@@ -133,8 +165,9 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     * @return 更新時: null, 
     *         登録時: string 本登録トークン
     */
-    public static function register(?string $name, ?string $email, ?int $role, ?string $uuid)
-    {
+    public static function register(
+        ?string $name, ?string $email, ?int $role, ?string $uuid
+    ) {
         // ログインユーザ情報取得
         $user = auth()->user();
 
@@ -144,9 +177,17 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         if ($uuid && self::updateByUuid($uuid, $data)) {
             return null;
         }
-        // 指定されていなければ登録
+
+        // 登録時は認証用トークンと有効期間を登録する
+        $token = md5(rand(0, 9) . $email . time());
+        $validityMinute = config('const.token_valide_minute');
+        $data['token'] = $token;
+        $data['token_validity_period'] =
+            Carbon::now()->addMinutes($validityMinute);
         $data['created_by'] = $user->id;
         self::insert($data);
+
+        return $token;
     }
 
     /**
@@ -234,21 +275,5 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     private static function whereUuid(string $uuid)
     {
         return self::where('uuid', $uuid);
-    }
-
-    /*
-     *
-     */
-    public function sendPasswordResetNotification($token)
-    {
-        $this->notify(new CustomPasswordReset($token));
-    }
-
-    /*
-     *
-     */
-    public function sendEmailVerificationNotification()
-    {
-        $this->notify(new VerifyEmail);
     }
 }
