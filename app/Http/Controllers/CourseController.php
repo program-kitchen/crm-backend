@@ -88,7 +88,7 @@ class CourseController extends Controller
                 $params['termInfo']
             );
         } else {
-            Course::create(
+            Course::register(
                 $params['name'],
                 $params['term'],
                 $params['summary'],
@@ -113,7 +113,8 @@ class CourseController extends Controller
         \Log::Debug("コース情報削除：". var_export($params, true));
 
         // コース情報を論理削除
-        Course::deleteOne($params['id']);
+        $ids = explode(",", $params['id']);
+        Course::erase($ids);
 
         // レスポンス送信
         return self::voidResponse();

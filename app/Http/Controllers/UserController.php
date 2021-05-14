@@ -113,7 +113,6 @@ class UserController extends Controller
      */
     public function register(Request $request)
     {
-        
         $params = request(['name', 'email', 'role', 'uuid']);
 
         // 入力項目検証
@@ -153,8 +152,14 @@ class UserController extends Controller
      */
     public function delete(Request $request)
     {
-        $this->validate($request, self::UUID_REQUIRED_RULES);
-        User::erase($request->input('uuid'));
+        // 入力項目検証
+        $uuids = explode(",", $request->input('uuid'));
+        foreach ($uuids as $uuid) {
+            $this->validateArray(array($uuid), self::UUID_REQUIRED_RULES);
+        }
+
+        // ユーザを削除
+        User::erase($uuids);
         return self::voidResponse();
     }
 

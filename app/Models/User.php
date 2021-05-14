@@ -6,7 +6,6 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Http\Response;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 use App\Notifications\CustomPasswordReset;
@@ -14,6 +13,7 @@ use App\Notifications\VerifyEmail;
 use App\Exceptions\ApiException;
 use Carbon\Carbon ;
 use Tymon\JWTAuth\Contracts\JWTSubject;
+use Symfony\Component\HttpFoundation\Response;
 
 class User extends Authenticatable implements JWTSubject, MustVerifyEmail
 {
@@ -122,7 +122,19 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         if ($isGetId) {
             $columns .= ', id';
         }
-        return self::whereUuid($uuid)->selectRaw($columns)->first();
+        $user = self::selectRaw($columns)
+            ->whereUuid($uuid)
+            ->whereNull('deleted_at')
+            ->first();
+        // ユーザ情報が取得できなかった場合は既に削除されている
+        if (!$user) {
+            throw new ApiException(
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                'ユーザ情報が削除されています。'
+            );
+        }
+
+        return $user;
     }
 
     /**
@@ -193,20 +205,34 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     /**
     * ユーザを削除する。
     *
-    * @param  string $uuid ユーザUUID
+    * @param  array $uuids ユーザUUID(複数指定可能)
     * @return void
     */
-    public static function erase(string $uuid)
+    public static function erase(array $uuids)
     {
-        // ログインユーザ情報取得
-        $user = auth()->user();
+        try {
+            // ログインユーザ情報取得
+            $user = auth()->user();
 
-        // 削除日を登録
-        $data = array(
-            'deleted_at' => DB::raw('CURRENT_TIMESTAMP'),
-            'updated_by' => $user->id
-        );
-        self::updateByUuid($uuid, $data);
+            // トランザクション開始
+            \DB::beginTransaction();
+            // 削除日を登録
+            $data = array(
+                'deleted_at' => DB::raw('CURRENT_TIMESTAMP'),
+                'updated_by' => $user->id
+            );
+            self::whereIn('uuid', $uuids)
+                ->update($data);
+            // コミット
+            \DB::commit();
+        }
+        catch (\Exception $e) {
+            \Log::Error("ユーザ情報削除失敗\r\n" . $e);
+            // ロールバック
+            \DB::rollback();
+            throw new ApiException("ユーザ情報の削除に失敗しました。");
+        }
+        
     }
 
     /**

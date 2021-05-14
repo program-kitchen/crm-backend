@@ -23,16 +23,18 @@ class Term extends Model
     /**
      * ターム一覧を取得する。
      *
-     * @param  int    courseId  コースID(未指定の場合は全件取得)
+     * @param  int $courseId コースID
      * @return LengthAwarePaginator コースに紐づくターム一覧
      */
-    public static function list()
+    public static function list(int $courseId)
     {
         // ターム情報取得
-        $terms = self::selectRaw(self::SELECT_COLUMNS)->
-                orderByRaw('`order` ASC');
+        $terms = self::selectRaw(self::SELECT_COLUMNS)
+            ->where('course_id', $courseId)
+            ->orderByRaw('`order` ASC')
+            ->get();
 
-        return $terms->get();
+        return $terms;
     }
 
     /**
@@ -45,7 +47,7 @@ class Term extends Model
     *           summary         ターム概要
     * @return void
     */
-    public static function createAll(int $courseId, array $termList, User $loginUser)
+    public static function register(int $courseId, array $termList, User $loginUser)
     {
         $order = 1;
         foreach ($termList as $term) {
@@ -66,7 +68,7 @@ class Term extends Model
     * @param  int $courseId コースID
     * @return void
     */
-    public static function deleteAll(int $courseId)
+    public static function erase(int $courseId)
     {
         self::where('course_id', $courseId)->delete();
     }
