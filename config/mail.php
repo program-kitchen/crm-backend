@@ -84,7 +84,7 @@ return [
     */
 
     'from' => [
-        'address' => 'coachtech-crm@estra.com',
+        'address' => 'coachtech@coachtech-crm.com',
         'name' => 'COACHTECH-CRM',
     ],
 
