@@ -8,6 +8,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 use App\Exceptions\ApiException;
 use App\Models\Term;
+use Symfony\Component\HttpFoundation\Response;
 
 /*
  * コース情報のモデルクラス
@@ -31,9 +32,11 @@ class Course extends Model
     public static function list()
     {
         // コース情報取得
-        $courses = self::selectRaw(self::SELECT_COLUMNS)->
-            orderByRaw('`id` ASC')->get();
-        
+        $courses = self::selectRaw(self::SELECT_COLUMNS)
+            ->whereNull('deleted_at')
+            ->orderByRaw('`id` ASC')
+            ->get();
+
         return $courses;
     }
 
@@ -46,8 +49,17 @@ class Course extends Model
     public static function pickUp(int $id)
     {
         // コース情報取得
-        $courses = self::selectRaw(self::SELECT_COLUMNS)->
-            where('id', $id)->first();
+        $course = self::selectRaw(self::SELECT_COLUMNS)
+            ->where('id', $id)
+            ->whereNull('deleted_at')
+            ->first();
+        // コース情報が取得できなかった場合は既に削除されている
+        if (!$course) {
+            throw new ApiException(
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                'コース情報が削除されています。'
+            );
+        }
         // ターム情報取得
         $terms = Term::list($id);
         $termList = array();
@@ -58,9 +70,9 @@ class Course extends Model
                 'summary'   => $term['summary'],
             );
         }
-        $courses['termInfo'] = $termList;
+        $course['termInfo'] = $termList;
 
-        return $courses;
+        return $course;
     }
 
     /**
@@ -75,7 +87,7 @@ class Course extends Model
     *                 summary   ターム概要
     * @return void
     */
-    public static function create(
+    public static function register(
         string $name, int $term, string $summary, array $termList
     ) {
         try {
@@ -90,7 +102,7 @@ class Course extends Model
             $params['updated_by'] = $user->id;
             $id = self::insertGetId($params);
             // ターム情報を登録
-            Term::createAll($id, $termList, $user);
+            Term::register($id, $termList, $user);
             // コミット
             \DB::commit();
         }
@@ -129,8 +141,8 @@ class Course extends Model
             $params['updated_by'] = $user->id;
             self::where('id', $id)->update($params);
             // ターム情報を更新
-            Term::deleteAll($id);
-            Term::createAll($id, $termList, $user);
+            Term::erase($id);
+            Term::register($id, $termList, $user);
             // コミット
             \DB::commit();
         }
@@ -145,10 +157,10 @@ class Course extends Model
     /**
      * コース情報を論理削除する。
      *
-     * @param  int $id コースID
+     * @param  array $ids コースID(複数指定可能)
      * @return void
      */
-    public static function deleteOne(int $id)
+    public static function erase(array $ids)
     {
         try {
             // ログインユーザ情報取得
@@ -156,7 +168,7 @@ class Course extends Model
             // トランザクション開始
             \DB::beginTransaction();
             // コース情報を論理削除
-            self::where('id', $id)->update([
+            self::whereIn('id', $ids)->update([
                 'deleted_at' => DB::raw('CURRENT_TIMESTAMP'),
                 'updated_by' => $user->id,
             ]);

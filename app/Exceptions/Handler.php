@@ -65,6 +65,13 @@ class Handler extends ExceptionHandler
         }
         // それ以外のエラーが発生した場合
 
+        // エラーログ出力
+        $url = $request->fullUrl();
+        \Log::error(
+            "request_url={ $url }\r\n" .
+            "Exception :\r\n" . $e
+        );
+
         // Responsableインターフェースを継承したクラスはここでレスポンスを返す
         if ($e instanceof Responsable) {
             return $e->toResponse($request);
