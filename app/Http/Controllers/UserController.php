@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use App\Exceptions\ApiException;
+use App\Mail\ResetPass;
 use App\Mail\UserActivation;
 use App\Models\User;
 use Validator;
@@ -135,7 +136,7 @@ class UserController extends Controller
         }
 
         // 登録時は認証用トークン付きの url を email で送る
-        $this->sendActivationMail($params, $token);
+        $this->sendMail($params['email'], $params['name'], $token);
 
         return self::voidResponse();
     }
@@ -214,14 +215,39 @@ class UserController extends Controller
     }
 
     /**
-     * ユーザ認証メールを送信する。
+     * ユーザのパスワードリセットメールを送信する。
      *
-     * @param  array    $params リクエストパラメータ
-     * @param  string   $token  認証用トークン
+     * @param  Request   $request HTTPリクエスト
+     *    uuid 対象ユーザUUID
      * @return void
      */
-    private function sendActivationMail(array $params, string $token)
+    public function resetPassword(Request $request)
     {
+        // 引数検証
+        $this->validate($request, self::UUID_REQUIRED_RULES);
+
+        // パスワードリセット用メールを送信
+        $user = User::pickUp($request->input('uuid'));
+        $token = User::createResetToken($user->uuid, $user->email);
+        $this->sendMail($user->email, $user->name, $token, true);
+
+        return self::voidResponse();
+    }
+
+    /**
+     * メールを送信する。
+     *
+     * @param  string   $params         リクエストパラメータ
+     * @param  string   $name         リクエストパラメータ
+     * @param  string   $token          認証用トークン
+     * @param  bool     $isResetPass    パスワードリセットフラグ
+     *                      true:パスワードリセットメール送信
+     *                      false:ユーザ認証メール送信
+     * @return void
+     */
+    private function sendMail(
+        string $email, string $toName, string $token, bool $isResetPass = false
+    ) {
         // 環境に応じてフロントエンドのURLを生成
         $env = 'local';
         if (env('APP_DEBUG', false)) {
@@ -231,13 +257,15 @@ class UserController extends Controller
                config('const.frontend')['activation'] .
                $token;
 
-        // ユーザ認証メール送信
+        // メール送信
         try {
-            Mail::to($params['email'])
-                ->send(new UserActivation($params['name'], $url));
+            $message = $isResetPass ?
+                new ResetPass($toName, $url) :
+                new UserActivation($toName, $url);
+            Mail::to($email)->send($message);
         } catch (\Exception $e) {
-            \Log::Error("ユーザ認証メール送信失敗\r\n" . $e);
-            throw new ApiException("ユーザ認証メールの送信に失敗しました。");
+            \Log::Error("メール送信失敗\r\n" . $e);
+            throw new ApiException("メールの送信に失敗しました。");
         }
     }
 }

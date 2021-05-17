@@ -57,6 +57,8 @@ Route::group([
         Route::post('/delete', [UserController::class, 'delete']);
         // 復活
         Route::post('/revive', [UserController::class, 'revive']);
+        // パスワードリセット
+        Route::post('/reset-pass', [UserController::class, 'resetPassword']);
     });
 
     // コース管理
