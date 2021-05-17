@@ -191,15 +191,12 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         }
 
         // 登録時は認証用トークンと有効期間を登録する
-        $token = md5(rand(0, 9) . $email . time());
-        $validityMinute = config('const.token_valide_minute');
-        $data['token'] = $token;
-        $data['token_validity_period'] =
-            Carbon::now()->addMinutes($validityMinute);
+        $tokenInfo = self::createNewToken($email);
+        $data = array_merge($data, $tokenInfo);
         $data['created_by'] = $user->id;
         self::insert($data);
 
-        return $token;
+        return $tokenInfo['token'];
     }
 
     /**
@@ -279,6 +276,31 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     }
 
     /**
+    * パスワードリセット用の有効期間付きトークンを生成する
+    *
+    * @param  string $uuid  ユーザUUID
+    * @param  string $email メールアドレス
+    * @return string パスワードリセット用トークン
+    */
+    public static function createResetToken(string $uuid, string $email)
+    {
+        // ログインユーザ情報取得
+        $user = auth()->user();
+
+        // パスワードリセット用トークン生成
+        $tokenInfo = self::createNewToken($email);
+
+        // 認証用トークンと有効期間を更新
+        $data = array(
+            'updated_by' => $user->id,
+        );
+        $data = array_merge($data, $tokenInfo);
+        self::updateByUuid($uuid, $data);
+
+        return $tokenInfo['token'];
+    }
+
+    /**
     * ユーザを更新する。
     *
     * 更新者にログインユーザid(?uuid) を設定する
@@ -301,5 +323,26 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     private static function whereUuid(string $uuid)
     {
         return self::where('uuid', $uuid);
+    }
+
+    /**
+    * メールアドレスを元にトークンを作成する。
+    *
+    * @param  string $email メールアドレス
+    * @return array $tokenInfo
+    *       token                   トークン
+    *       token_validity_period   トークン有効期間
+    */
+    private static function createNewToken(string $email)
+    {
+        $token = md5(rand(0, 9) . $email . time());
+        $validityMinute = config('const.token_valide_minute');
+        $now = Carbon::now();
+        $tokenInfo = array(
+            'token'                 => $token,
+            'token_validity_period' => $now->addMinutes($validityMinute),
+        );
+
+        return $tokenInfo;
     }
 }
