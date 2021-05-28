@@ -70,7 +70,7 @@ class CourseController extends Controller
     {
         // デバッグログ出力
         $params = request(['id', 'name', 'term', 'termInfo']);
-        $params['summary'] = $request->input('summary', '');
+        $params['summary'] = $request->input('summary') ?: '';
         \Log::Debug("コース情報登録：". self::arrayToString($params));
 
         // 入力チェック実施
