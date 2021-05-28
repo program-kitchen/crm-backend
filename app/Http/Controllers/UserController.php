@@ -12,6 +12,7 @@ use App\Mail\ResetPass;
 use App\Mail\UserActivation;
 use App\Models\User;
 use Validator;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
 * ユーザ管理
@@ -265,7 +266,12 @@ class UserController extends Controller
             Mail::to($email)->send($message);
         } catch (\Exception $e) {
             \Log::Error("メール送信失敗\r\n" . $e);
-            throw new ApiException("メールの送信に失敗しました。");
+            throw new ApiException(
+                Response::HTTP_BAD_REQUEST,
+                "メールの送信に失敗しました。\r\n" .
+                "メールアドレスが正しいかご確認下さい。\r\n" .
+                "正しい場合はお手数ですが、システム管理者へお問い合わせください。"
+            );
         }
     }
 }

@@ -59,8 +59,12 @@ class Handler extends ExceptionHandler
     {
         // バリデーションでエラーが発生した場合
         if ($e instanceof ValidationException) {
+            // 先頭の項目のエラーメッセージ配列を取得
+            $itemErrors = $e->errors();
+            $itemKey = array_key_first($itemErrors);
+            // エラーメッセージ配列の先頭のメッセージを返す
             return $this->toResponse(
-                $request, $e->status, json_encode($e->errors(), JSON_UNESCAPED_UNICODE)
+                $request, $e->status, $itemErrors[$itemKey][0]
             );
         }
         // それ以外のエラーが発生した場合
