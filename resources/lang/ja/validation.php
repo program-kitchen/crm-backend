@@ -129,7 +129,12 @@ return [
     */
 
     'attributes' => [
+        'uuid'      => 'UUID',
         'name'      => '名称',
+        'email'     => 'メールアドレス',
+        'role'      => 'ユーザ権限',
+        'password'  => 'パスワード',
+
         'term'      => '期間',
         'summary'   => '概要',
     ],

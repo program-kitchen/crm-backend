@@ -56,7 +56,7 @@ class Course extends Model
         // コース情報が取得できなかった場合は既に削除されている
         if (!$course) {
             throw new ApiException(
-                Response::HTTP_INTERNAL_SERVER_ERROR,
+                Response::HTTP_BAD_REQUEST,
                 'コース情報が削除されています。'
             );
         }
@@ -110,7 +110,10 @@ class Course extends Model
             \Log::Error("コース情報登録失敗\r\n" . $e);
             // ロールバック
             \DB::rollback();
-            throw new ApiException("コース情報の登録に失敗しました。");
+            throw new ApiException(
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                "コース情報の登録に失敗しました。"
+            );
         }
     }
 
@@ -150,7 +153,10 @@ class Course extends Model
             \Log::Error("コース情報更新失敗\r\n" . $e);
             // ロールバック
             \DB::rollback();
-            throw new ApiException("コース情報の更新に失敗しました。");
+            throw new ApiException(
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                "コース情報の更新に失敗しました。"
+            );
         }
     }
 
@@ -179,7 +185,10 @@ class Course extends Model
             \Log::Error("コース情報削除失敗\r\n" . $e);
             // ロールバック
             \DB::rollback();
-            throw new ApiException("コース情報の削除に失敗しました。");
+            throw new ApiException(
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                "コース情報の削除に失敗しました。"
+            );
         }
     }
 }

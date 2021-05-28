@@ -129,7 +129,7 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         // ユーザ情報が取得できなかった場合は既に削除されている
         if (!$user) {
             throw new ApiException(
-                Response::HTTP_INTERNAL_SERVER_ERROR,
+                Response::HTTP_BAD_REQUEST,
                 'ユーザ情報が削除されています。'
             );
         }
@@ -227,7 +227,10 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
             \Log::Error("ユーザ情報削除失敗\r\n" . $e);
             // ロールバック
             \DB::rollback();
-            throw new ApiException("ユーザ情報の削除に失敗しました。");
+            throw new ApiException(
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                "ユーザ情報の削除に失敗しました。"
+            );
         }
         
     }
